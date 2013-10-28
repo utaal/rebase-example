@@ -1,0 +1,19 @@
+#question { position: relative; }
+#question .countdown {
+  position: absolute;
+  right: 0;
+  top: 0;
+
+  width: 5em;
+  padding: 0.5em;
+  border: 0.2em solid green;
+  border-radius: 0.5em;
+
+  background: rgba(255, 255, 255, 0.5);
+
+  color: green;
+  text-align: center;
+  font-family: monospace;
+  font-size: 1.5em;
+  font-weight: bold;
+}
