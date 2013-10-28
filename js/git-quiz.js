@@ -1,6 +1,8 @@
 (function() {
   $(initQuiz);
 
+  var QUESTION_SECONDS = 5;
+
   var QUESTIONS = [
     {
       title: 'To rebase `experiment` on `master`, I must be…',
@@ -40,19 +42,47 @@
     }
   ];
 
-  var templater = $.noop, qIndex = -1, score = 0, container;
+  var templater = $.noop, qIndex = -1, score = 0, container, remaining, counter, countdown;
 
   function checkAnswer(e) {
+    clearInterval(counter);
+    counter = countdown = null;
     container.find('input').attr('disabled', true);
-    var item = $(e.currentTarget).closest('.radio');
-    if ($(e.currentTarget).data('correct')) {
+    var item, correct = false;
+    if (e) {
+      item = $(e.currentTarget).closest('.radio');
+      correct = $(e.currentTarget).data('correct');
+    }
+    if (correct) {
       ++score;
-      item.addClass('has-success').append(" — Your score is now " + score);
+      if (item)
+        item.addClass('has-success').append(" — Your score is now " + score);
     } else {
-      item.addClass('has-error');
+      if (item)
+        item.addClass('has-error');
       container.find('input[data-correct="true"]').closest('.radio').addClass('has-success');
     }
   }
+
+  function countDown() {
+    --remaining;
+    countdown = countdown || container.find('.countdown');
+    countdown.text(formatTime(remaining));
+
+    if (remaining > 0)
+      return;
+
+    checkAnswer();
+  }
+
+  function formatTime(seconds) {
+    var mins = Math.floor(seconds / 60), secs = seconds % 60;
+    if (mins < 10) mins = '0' + mins;
+    if (secs < 10) secs = '0' + secs;
+    return mins + ':' + secs;
+  }
+
+  Handlebars.registerHelper('format_time', formatTime);
 
   function initQuiz() {
     templater = Handlebars.compile($('#template').html());
@@ -74,8 +104,10 @@
 
     question.title = question.title.replace(CODE_REGEX, CODE_REPLACER);
     for (var index = 0, len = question.answers.length; index < len; ++index)
-        question.answers[index].text = question.answers[index].text.replace(CODE_REGEX, CODE_REPLACER);
+      question.answers[index].text = question.answers[index].text.replace(CODE_REGEX, CODE_REPLACER);
+    question.remaining = remaining = QUESTION_SECONDS;
     container.removeClass('jumbotron').html(templater(question));
+    counter = setInterval(countDown, 1000);
   }
 
   function wrapUp() {
